@@ -1,19 +1,4 @@
-"""
-===========================================================
-Triple Phase Shift (TPS) Optimization for Dual Active Bridge
-===========================================================
 
-Implements Tong et al. (2016) analytical method to minimize Irms
-for a given target power level using closed-form equations and
-Sequential Quadratic Programming (SLSQP) optimization.
-
-This script sweeps power levels and computes the optimal D0, D1, D2
-that minimize RMS current, storing results into a CSV lookup table.
-
-Author: Harshit Singh (BTP Project, IIT Roorkee)
-Date: November 2025
-===========================================================
-"""
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize, NonlinearConstraint, Bounds

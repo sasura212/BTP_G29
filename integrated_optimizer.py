@@ -1,18 +1,4 @@
-"""
-===========================================================
-Integrated Multi-Mode TPS Optimizer for Dual Active Bridge
-===========================================================
 
-For each target power level, this script:
-1. Generates ALL valid (D0, D1, D2) combinations across Modes 1-6
-2. Filters combinations that achieve the target power (within tolerance)
-3. Selects the combination with MINIMUM Irms
-4. Creates an optimal lookup table with global minimum across all modes
-
-Author: Harshit Singh (BTP Project, IIT Roorkee)
-Date: November 2025
-===========================================================
-"""
 
 import numpy as np
 import pandas as pd
@@ -51,6 +37,11 @@ def is_valid_mode4(D0, D1, D2):
     return (D0 < D1) and (D1 < 1) and ((D0 + D2) > 0) and ((D0 + D2) < D1)
 
 
+def is_valid_mode5(D0, D1, D2):
+    """Mode 5: D0 < D1, D1 < D0+D2 < 1"""
+    return (D0 < D1) and (D1 < (D0 + D2)) and ((D0 + D2) < 1)
+
+
 def is_valid_mode6(D0, D1, D2):
     """Mode 6: D0 < D1, 1 < D0+D2 < 1+D1"""
     return (D0 < D1) and ((D0 + D2) > 1) and ((D0 + D2) < (1 + D1))
@@ -86,6 +77,14 @@ def power_mode4(D0, D1, D2):
     return (-(V1*V2*T)/L) * (
         -D0 + 0.5*D1 + D0*D1 - 0.5*D1**2 - 
         0.5*D2 + 0.5*D1*D2
+    )
+
+
+def power_mode5(D0, D1, D2):
+    """Mode 5 power equation"""
+    return (-(V1*V2*T)/L) * (
+        -D0 + 0.5*D0**2 + 0.5*D1 - 0.5*D2 + 
+        D0*D2 - 0.5*D1*D2 + 0.5*D2**2
     )
 
 
@@ -153,6 +152,20 @@ def calculate_irms_mode4(D0, D1, D2):
     return np.sqrt(abs(irms_squared))
 
 
+def calculate_irms_mode5(D0, D1, D2):
+    """Irms for Mode 5"""
+    irms_squared = (T**2/L**2) * (
+        (0.125/3)*(V1**2) + (0.125/3)*(V2**2) +
+        (0.5/3)*(0.25 - 1.5*D1**2 + D1**3)*V1**2 -
+        (0.5/3)*(0.25 - 1.5*D0**2 + D0**3)*V1*V2 -
+        (0.5/3)*(0.25 - 1.5*(D0+D2)**2 + (D0+D2)**3)*V1*V2 -
+        (0.5/3)*(0.25 - 1.5*(D1-D0)**2 + (D1-D0)**3)*V1*V2 -
+        (0.5/3)*(0.25 - 1.5*(D0+D2-D1)**2 + (D0+D2-D1)**3)*V1*V2 +
+        (0.5/3)*(0.25 - 1.5*D2**2 + D2**3)*V2**2
+    )
+    return np.sqrt(abs(irms_squared))
+
+
 def calculate_irms_mode6(D0, D1, D2):
     """Irms for Mode 6"""
     irms_squared = (T**2/L**2) * (
@@ -188,6 +201,11 @@ MODES = {
         'constraint': is_valid_mode4,
         'power': power_mode4,
         'irms': calculate_irms_mode4
+    },
+    5: {
+        'constraint': is_valid_mode5,
+        'power': power_mode5,
+        'irms': calculate_irms_mode5
     },
     6: {
         'constraint': is_valid_mode6,
@@ -255,7 +273,8 @@ if __name__ == "__main__":
         power_targets = np.array([100, 300, 500, 700, 1000])
         print("🧪 TEST MODE: Running with 5 power points only")
     else:
-        power_targets = np.linspace(100, 1000, 20)
+        # Full lookup table: 100W to 1000W in steps of 10W (91 points)
+        power_targets = np.arange(100, 1001, 10)
     
     print("=" * 70)
     print(" Integrated Multi-Mode TPS Optimization")

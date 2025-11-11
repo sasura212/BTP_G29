@@ -9,7 +9,7 @@ This project implements optimal control parameter selection for Dual Active Brid
 BTP_G29/
 ├── dataset_generator.py          # SLSQP optimization-based approach
 ├── integrated_optimizer.py       # Multi-mode grid-search approach ⭐
-├── mode1.py ... mode6.py         # Individual mode dataset generators
+├── mode1.py ... mode6.py         # Individual mode dataset generators (all 6 modes)
 ├── optimized_lookup_table_tps.csv          # SLSQP results
 ├── integrated_optimal_lookup_table.csv     # Grid-search results
 └── requirements.txt
