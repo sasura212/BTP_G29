@@ -1,411 +1,297 @@
-# Optimal PWM Control of Dual Active Bridge Converters for EV Charging Applications
-
-**BTP Project | IIT Roorkee | Department of Electrical Engineering**
-
-**Authors:** Harshit Singh (22115065), Jatin Singal (22115074), Karthik Ayangar (22115080)
-
-**Course:** EEN-400A
-
----
+# DAB Triple Phase Shift (TPS) Optimization Project
 
 ## 📋 Project Overview
 
-This project develops a **data-driven optimization framework** for Pulse-Width Modulation (PWM) control of Dual Active Bridge (DAB) converters in multi-port EV charging stations. The objective is to dynamically adjust the converter's phase-shift parameters (D₀, D₁, D₂) in real-time to:
+This project implements optimal control parameter selection for **Dual Active Bridge (DAB) converters** using **Triple Phase Shift (TPS) modulation** for electric vehicle charging applications. It combines analytical optimization methods with machine learning to predict optimal control parameters across variable load conditions (100-1000W).
 
-1. Meet variable power demands
-2. Minimize inductor RMS current (Irms)
-3. Reduce conduction losses
-4. Maximize overall efficiency across all operating conditions
-
-### Key Innovation
-
-Traditional DAB converters use **Single Phase Shift (SPS)** control, which is simple but inefficient under variable loads. This project implements **Triple Phase Shift (TPS)** control with optimization to minimize RMS current, achieving superior efficiency across power ranges.
+### Key Features
+- ✅ Multi-mode analytical optimization (6 operating modes)
+- ✅ Dual machine learning models (Random Forest & SVR)
+- ✅ Interactive web dashboard with model comparison
+- ✅ Comprehensive dataset generation and validation
+- ✅ Real-time parameter prediction
 
 ---
 
-## 🎯 Project Objectives
-
-**Primary Objective:**
-$$\text{Minimize: } I_{rms}(D_0, D_1, D_2)$$
-$$\text{Subject to: } P(D_0, D_1, D_2) = P_{req}(t)$$
-
-Where:
-- **D₀**: External phase shift (between primary and secondary bridges)
-- **D₁**: Internal phase shift of primary bridge
-- **D₂**: Internal phase shift of secondary bridge
-- **Irms**: Inductor RMS current (causes conduction losses)
-- **P_req**: Required instantaneous power output
-
----
-
-## 📁 Project Structure
+## 🏗️ Project Structure
 
 ```
-/BTP-DAB-Optimization
+BTP_G29/
+├── config/
+│   └── requirements.txt           # Python dependencies
 │
-├── docs/                          # Research papers and project reports
-│   ├── BTP_G29.pdf
-│   ├── Power_flow_and_inductor_current_analysis.pdf
-│   └── BTP_Presentation.pdf
+├── dashboard/
+│   ├── dashboard.py              # Streamlit web application
+│   └── README.md                 # Dashboard usage guide
 │
-├── notebooks/                     # Jupyter notebooks for analysis
-│   ├── 01_Analytical_Model.ipynb
-│   ├── 02_Data_Generation.ipynb
-│   ├── 03_Optimization.ipynb
-│   └── 04_ML_Model.ipynb
+├── scripts/
+│   ├── optimization/
+│   │   ├── dataset_generator.py  # SLSQP optimization approach
+│   │   └── integrated_optimizer.py  # Multi-mode grid-search ⭐ (Recommended)
+│   │
+│   ├── machine_learning/
+│   │   ├── train_tps_regressor.py   # Random Forest training
+│   │   └── train_tps_svr.py         # SVR training
+│   │
+│   └── modes/
+│       ├── mode1.py              # Mode 1 dataset generator
+│       ├── mode2.py              # Mode 2 dataset generator
+│       ├── mode3.py              # Mode 3 dataset generator
+│       ├── mode4.py              # Mode 4 dataset generator
+│       ├── mode5.py              # Mode 5 dataset generator
+│       └── mode6.py              # Mode 6 dataset generator
 │
-├── scripts/                       # Executable Python scripts
-│   └── 05_Dashboard.py
+├── data/
+│   ├── integrated_optimal_lookup_table.csv    # Optimal parameters (91 points)
+│   ├── optimized_lookup_table_tps.csv         # SLSQP results
+│   ├── rf_interpolated_lookup_table.csv       # RF model predictions
+│   └── svr_interpolated_lookup_table.csv      # SVR model predictions
 │
-├── data/                          # Generated datasets
-│   ├── dab_data.csv               # Raw simulation data
-│   └── optimized_lookup_table.csv # Final control mapping
+├── models/
+│   ├── tps_rf_model.pkl          # Random Forest model (2.6 MB)
+│   ├── svr_model_D0.pkl          # SVR model for D0
+│   ├── svr_model_D1.pkl          # SVR model for D1
+│   ├── svr_model_D2.pkl          # SVR model for D2
+│   ├── svr_model_Irms_A.pkl      # SVR model for Irms
+│   └── svr_scaler.pkl            # Feature scaler for SVR
 │
-├── models/                        # Trained ML models
-│   └── model.pkl
+├── figures/
+│   ├── optimization_results.png  # Optimal parameters visualization
+│   ├── ml_comparison.png         # RF vs SVR comparison
+│   ├── mode_distribution.png     # Mode distribution chart
+│   ├── rf_predictions_vs_actual.png
+│   └── svr_predictions_vs_actual.png
 │
-├── constants.py                   # Project constants and parameters
-├── requirements.txt               # Python dependencies
-└── README.md                      # This file
+├── docs/
+│   ├── README.md                 # Original project README
+│   ├── final_report.tex          # IEEE format final report
+│   ├── report.tex                # Mid-term report
+│   ├── INTEGRATION_COMPLETE.md   # Mode 5 integration notes
+│   ├── MODE5_INTEGRATION_SUMMARY.md
+│   ├── MODE5_QUICK_REF.md
+│   ├── SVR_IMPLEMENTATION_SUMMARY.md
+│   ├── SVR_MODEL_README.md
+│   ├── REQUIRED_FIGURES.md
+│   └── optimization_log.txt
+│
+└── src/
+    └── __init__.py
 ```
 
 ---
 
-## 🧬 Development Stages
+## 🚀 Quick Start
 
-### **Stage 1: Analytical Model** (`01_Analytical_Model.ipynb`)
-
-**Objective:** Extract and implement analytical equations from Tong et al. (2016).
-
-**Outputs:**
-- Symbolic expressions for Power: $P(D_0, D_1, D_2)$
-- Symbolic expressions for Inductor RMS: $I_{rms}(D_0, D_1, D_2)$
-- Six operating modes classification
-- Verification plots
-
-**Key Equations (from Tong et al. 2016):**
-
-For each of 6 modes, power and RMS current are expressed analytically:
-
-$$P = \frac{V_1 V_2}{L} \cdot f(D_0, D_1, D_2) \text{ [depends on mode]}$$
-
-$$I_{rms} = \sqrt{\frac{1}{T_s} \int_0^{T_s} i_L^2(t) \, dt}$$
-
-Where the inductor current $i_L(t)$ is a superposition of triangular waves controlled by D₀, D₁, D₂.
-
----
-
-### **Stage 2: Data Generation** (`02_Data_Generation.ipynb`)
-
-**Objective:** Simulate 2-level DAB converter and generate training data.
-
-**Process:**
-1. Sweep through D₀, D₁, D₂ parameter space
-2. For each combination, compute:
-   - Power transfer (P)
-   - Inductor RMS current (Irms)
-   - Operating mode classification
-3. Save to `dab_data.csv`
-
-**Output Format:**
-```
-D0, D1, D2, Mode, Power_W, Irms_A
-0.1, 0.05, 0.1, 1, 500, 2.34
-0.1, 0.05, 0.15, 1, 520, 2.41
-...
-```
-
-**Size:** ~20,000 data points covering feasible operating regions
-
----
-
-### **Stage 3: Optimization** (`03_Optimization.ipynb`)
-
-**Objective:** Solve the optimization problem for given power demands.
-
-**Algorithm:**
-1. For each P_req in range [P_min, P_max]:
-   - Initialize from data-based guess
-   - Minimize Irms subject to P(D₀, D₁, D₂) = P_req
-   - Use scipy.optimize.minimize (SLSQP method)
-2. Store optimal (D₀*, D₁*, D₂*) → `optimized_lookup_table.csv`
-
-**Output Format:**
-```
-Power_req_W, D0_opt, D1_opt, D2_opt, Irms_opt, Mode_opt
-100, 0.15, 0.08, 0.12, 0.95, 1
-200, 0.22, 0.12, 0.18, 1.32, 1
-...
-```
-
-**Validation:** Verify P(D₀*, D₁*, D₂*) ≈ P_req with <1% error
-
----
-
-### **Stage 4: Machine Learning** (`04_ML_Model.ipynb`)
-
-**Objective:** Train neural network for fast, real-time inference.
-
-**Model:**
-- **Input:** Power request (P_req), Voltage ratio (k)
-- **Output:** Optimal parameters (D₀*, D₁*, D₂*)
-- **Architecture:** MLP with layers (2 → 128 → 64 → 32 → 3)
-- **Training:** 80% data, 20% test, 10% validation
-
-**Performance:**
-- Mean Squared Error (MSE) < 1e-4
-- Prediction time: <1ms per sample
-
-**Export:** `models/model.pkl`
-
----
-
-### **Stage 5: Dashboard & Visualization** (`05_Dashboard.py`)
-
-**Objective:** Interactive visualization and control demonstration.
-
-**Features:**
-1. **3D Surfaces:**
-   - Power vs (D₀, D₁, D₂)
-   - Irms vs (D₀, D₁, D₂)
-   - Efficiency landscape
-
-2. **Control Mapping:**
-   - Optimal (D₀, D₁, D₂) for any P_req
-   - Mode transitions
-   - SPS vs. TPS comparison
-
-3. **Dynamic Simulation:**
-   - Real-time power profile input
-   - Adaptive control response
-   - Loss and efficiency tracking
-
-**Run Dashboard:**
-```bash
-streamlit run scripts/05_Dashboard.py
-```
-
----
-
-## 🔧 Installation & Setup
-
-### Prerequisites
-- Python 3.8+
-- pip or conda
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   cd /workspaces/BTP_G29
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Verify installation:**
-   ```bash
-   python constants.py
-   ```
-
----
-
-## 📊 Quick Start
-
-### Run All Stages Sequentially
-
-1. **Stage 1 - Analytical Model:**
-   ```bash
-   jupyter notebook notebooks/01_Analytical_Model.ipynb
-   ```
-
-2. **Stage 2 - Data Generation:**
-   ```bash
-   jupyter notebook notebooks/02_Data_Generation.ipynb
-   ```
-
-3. **Stage 3 - Optimization:**
-   ```bash
-   jupyter notebook notebooks/03_Optimization.ipynb
-   ```
-
-4. **Stage 4 - Machine Learning:**
-   ```bash
-   jupyter notebook notebooks/04_ML_Model.ipynb
-   ```
-
-5. **Stage 5 - Dashboard:**
-   ```bash
-   streamlit run scripts/05_Dashboard.py
-   ```
-
-### Generate All Results (Quick Mode)
+### 1. Installation
 
 ```bash
-python run_pipeline.py --quick
+# Install dependencies
+pip install -r config/requirements.txt
+```
+
+### 2. Generate Optimal Dataset
+
+**Recommended: Multi-mode Grid Search** (Finds global optimum)
+```bash
+# Full optimization (91 points, ~10 minutes)
+python3 scripts/optimization/integrated_optimizer.py
+
+# Quick test (5 points)
+python3 scripts/optimization/integrated_optimizer.py --test
+```
+
+**Alternative: Fast SLSQP Optimizer** (< 1 second)
+```bash
+python3 scripts/optimization/dataset_generator.py
+```
+
+### 3. Train Machine Learning Models
+
+**Random Forest (Recommended for D0 and Irms)**
+```bash
+python3 scripts/machine_learning/train_tps_regressor.py
+```
+
+**Support Vector Regression (Recommended for D2)**
+```bash
+python3 scripts/machine_learning/train_tps_svr.py
+```
+
+### 4. Run Interactive Dashboard
+
+```bash
+cd dashboard
+python3 -m streamlit run dashboard.py
+```
+
+Then open your browser at `http://localhost:8501`
+
+---
+
+## 📊 System Specifications
+
+| Parameter | Value |
+|-----------|-------|
+| Primary Voltage (V₁) | 200 V |
+| Secondary Voltage (V₂) | 50 V |
+| Inductance (L) | 20 µH |
+| Switching Frequency (f) | 50 kHz |
+| Half Period (T) | 10 µs |
+| Power Range | 100 - 1000 W |
+| Operating Modes | 1, 2, 3, 4, 5, 6 |
+
+---
+
+## 🎯 Operating Modes
+
+Based on Tong et al. (2016) analytical methods:
+
+| Mode | Constraints | Typical Power Range |
+|------|------------|---------------------|
+| 1 | D₁ < D₀, D₁ < D₀+D₂, D₀+D₂ < 1 | High (600-1000W) |
+| 2 | D₁ < D₀, 1 < D₀+D₂ < 1+D₁ | Low-Medium |
+| 3 | D₁ < D₀, 1+D₁ < D₀+D₂ < 2 | Low (100-200W) |
+| 4 | D₀ < D₁, 0 < D₀+D₂ < D₁ | Medium |
+| 5 | D₀ < D₁, D₁ < D₀+D₂ < 1 | Medium (200-550W) |
+| 6 | D₀ < D₁, 1 < D₀+D₂ < 1+D₁ | Low |
+
+---
+
+## 🤖 Machine Learning Performance
+
+### Random Forest Model
+- **Test R² (D₀):** 0.686 ⭐
+- **Test R² (D₁):** -0.262
+- **Test R² (D₂):** 0.589
+- **Test R² (Irms):** 0.985 ⭐
+- **Model Size:** 2.6 MB
+
+### SVR Model
+- **Test R² (D₀):** 0.401
+- **Test R² (D₁):** -0.204
+- **Test R² (D₂):** 0.930 ⭐ (+58% vs RF)
+- **Test R² (Irms):** 0.986 ⭐
+- **Model Size:** 13 KB (200× smaller)
+
+### Recommendations
+- Use **Random Forest** for D₀ prediction
+- Use **SVR** for D₂ prediction (superior accuracy)
+- Both models excel at Irms prediction
+- SVR is better for embedded/edge deployment (compact size)
+
+---
+
+## 📈 Dataset Distribution
+
+After Mode 5 integration, the optimal lookup table contains 91 points:
+
+| Mode | Points | Percentage |
+|------|--------|-----------|
+| Mode 1 | 51 | 56% |
+| Mode 5 | 28 | 31% |
+| Mode 3 | 7 | 8% |
+| Mode 6 | 3 | 3% |
+| Mode 4 | 2 | 2% |
+
+**Note:** Mode 2 is rarely optimal for this power range and system parameters.
+
+---
+
+## 🎓 Usage Examples
+
+### Predict Parameters for Specific Power
+
+**Using Random Forest:**
+```python
+import joblib
+import numpy as np
+
+# Load model
+model = joblib.load('models/tps_rf_model.pkl')
+
+# Predict for 500W
+power = 500.0
+prediction = model.predict([[power]])[0]
+
+D0, D1, D2, Irms = prediction
+print(f"D0: {D0:.4f}, D1: {D1:.4f}, D2: {D2:.4f}, Irms: {Irms:.2f}A")
+```
+
+**Using SVR:**
+```python
+import joblib
+import numpy as np
+
+# Load models and scaler
+scaler = joblib.load('models/svr_scaler.pkl')
+model_D2 = joblib.load('models/svr_model_D2.pkl')
+model_Irms = joblib.load('models/svr_model_Irms_A.pkl')
+
+# Predict for 500W
+power = 500.0
+power_scaled = scaler.transform([[power]])
+
+D2_pred = model_D2.predict(power_scaled)[0]
+Irms_pred = model_Irms.predict(power_scaled)[0]
+
+print(f"D2: {D2_pred:.4f}, Irms: {Irms_pred:.2f}A")
 ```
 
 ---
 
-## 📈 Expected Results
+## 📚 Documentation
 
-### Efficiency Improvement
-
-| Control Strategy | Efficiency @ 50% Load | Efficiency @ 100% Load |
-|------------------|----------------------|----------------------|
-| SPS              | 85%                  | 92%                  |
-| TPS (Optimized)  | 94%                  | 97%                  |
-
-### RMS Current Reduction
-
-- **SPS:** Irms = 10A (avg) @ 5kW
-- **TPS (Optimized):** Irms = 6.5A (avg) @ 5kW → **35% reduction**
-
-### ML Model Performance
-
-- **Training MSE:** <1e-4
-- **Inference Time:** <1ms
-- **Prediction Accuracy:** ±2% on test set
+- **Dashboard Guide:** `dashboard/README.md`
+- **Final Report:** `docs/final_report.tex` (IEEE format)
+- **Mode 5 Integration:** `docs/INTEGRATION_COMPLETE.md`
+- **SVR Implementation:** `docs/SVR_IMPLEMENTATION_SUMMARY.md`
+- **Figure Generation:** `docs/REQUIRED_FIGURES.md`
 
 ---
 
-## 🧮 Key Equations Reference
+## 🔬 Research Background
 
-### DAB Converter Power Transfer (Tong et al. 2016)
+This work is based on the analytical Triple Phase Shift modulation method presented in:
 
-For Mode 1 (0 < D₁ < D₀ < 1, D₁ < D₀ + D₂ < 1):
+> **Tong et al. (2016)**, "Analytical Model for Triple Phase Shift Control for DAB Converters"
 
-$$P = \frac{V_1^2}{2\pi f_s L} [2kφ(1-D_2) - k(D_1^2 + D_2^2 - φ^2 - 2D_1φ)]$$
-
-### Inductor RMS Current
-
-$$I_{rms} = \sqrt{\frac{1}{T} \int_0^T i_L^2(t) \, dt}$$
-
-Where $i_L(t)$ is composed of triangular waveforms shaped by D₀, D₁, D₂.
-
-### Conduction Loss
-
-$$P_{loss} = I_{rms}^2 \cdot R_{esr}$$
-
-Thus, minimizing Irms directly reduces losses.
+The project extends the analytical approach with:
+1. Exhaustive multi-mode optimization
+2. Machine learning-based parameter prediction
+3. Interactive visualization and comparison tools
 
 ---
 
-## 📚 References
+## 👥 Authors
 
-### Primary References
+- **Harshit Singh** - Department of Electrical Engineering, IIT Roorkee
+- **Jatin Singal** - Department of Electrical Engineering, IIT Roorkee
+- **Karthik Ayangar** - Department of Electrical Engineering, IIT Roorkee
 
-1. **Tong et al. (2016):** "Power flow and inductor current analysis of PWM control for Dual Active Bridge Converter," IEEE IPEMC-ECCE Asia.
-   - Provides the analytical framework for 6-mode operation
-   - Defines equations for P and Irms
-
-2. **Zhao et al. (2013):** "Current-stress-optimized switching strategy of isolated bidirectional DC/DC converter with dual-phase-shift control," IEEE Transactions on Industrial Electronics.
-   - Motivation for current stress optimization
-
-3. **Kheraluwala et al. (1992):** "Performance characterization of a high-power dual active bridge dc-to-dc converter," IEEE Transactions on Industry Applications.
-   - Original DAB topology paper
-
-### Project Report
-
-4. **BTP_G29 (2025):** "Optimal PWM Control of Dual Active Bridge Converters for EV Charging Applications," IIT Roorkee.
-   - Complete project documentation
-   - Simulation results and implementation details
+**BTP Project, IIT Roorkee | November 2025**
 
 ---
 
-## 🔬 Theoretical Background
+## 📄 License
 
-### Why DAB for EV Charging?
-
-| Feature              | Benefit for EV Charging |
-|----------------------|-------------------------|
-| Bidirectional Flow   | Enables Vehicle-to-Grid (V2G) |
-| Galvanic Isolation   | Safety, no ground loops |
-| Soft Switching (ZVS) | Low EMI, high efficiency |
-| High Power Density   | Compact fast-charging stations |
-| Modularity          | Scales to multi-port systems |
-
-### The Variable Load Problem
-
-Traditional DAB converters:
-- Designed for **fixed nominal power**
-- Use pre-set phase shifts (D₀, D₁, D₂)
-- Lose efficiency under **variable loads** (typical in charging stations)
-- Experience high **circulating currents** and **loss of soft switching**
-
-Our Solution:
-- **Real-time, adaptive control** using optimization
-- **Minimize Irms** for every power demand
-- Maintain **high efficiency across all loads**
-- Ready for **ML-based fast inference**
+This project is part of academic research at IIT Roorkee.
 
 ---
 
-## 🎓 Learning Outcomes
+## 🙏 Acknowledgments
 
-By completing this project, you will understand:
-
-1. **Power Electronics:**
-   - DAB converter topology and operation
-   - Phase-shift modulation and multi-level control
-   - Soft-switching and zero-voltage-switching (ZVS)
-
-2. **Control Theory:**
-   - Optimization problem formulation
-   - Constrained optimization (SLSQP)
-   - Real-time parameter adaptation
-
-3. **Data Science & ML:**
-   - Dataset generation and preprocessing
-   - Neural network regression
-   - Model validation and inference
-
-4. **EV Charging Infrastructure:**
-   - Multi-port charging challenges
-   - State-of-charge (SoC) dynamics
-   - Efficiency and thermal management
+- Prof. [Supervisor Name] - Project Supervisor
+- Department of Electrical Engineering, IIT Roorkee
+- Based on analytical methods by Tong et al. (2016)
 
 ---
 
-## 🤝 Contributing
+## 📞 Contact
 
-To add features or improvements:
-
-1. Create a new branch: `git checkout -b feature/your-feature`
-2. Make changes and test thoroughly
-3. Commit with clear messages: `git commit -m "Add feature description"`
-4. Push and create a pull request
+For questions or collaboration:
+- Email: harshit_s@ee.iitr.ac.in
+- GitHub: [Repository Link]
 
 ---
 
-## 📝 License
-
-This project is part of the BTP curriculum at IIT Roorkee.
-
----
-
-## ✉️ Contact
-
-**Project Authors:**
-- Harshit Singh (22115065) — [email protected]
-- Jatin Singal (22115074) — [email protected]
-- Karthik Ayangar (22115080) — [email protected]
-
-**Advisor:** [Advisor Name], Department of Electrical Engineering, IIT Roorkee
-
----
-
-## 📅 Project Timeline
-
-- **Phase 1 (Sep-Oct 2024):** Literature review, theoretical analysis ✓
-- **Phase 2 (Oct-Nov 2024):** Simulation, data generation ✓
-- **Phase 3 (Nov 2024):** Optimization algorithm, lookup table generation
-- **Phase 4 (Nov-Dec 2024):** ML integration, dashboard development
-- **Phase 5 (Dec 2024):** Final testing, documentation, presentation
-
----
-
-**Last Updated:** November 2024
-**Status:** In Development
+**Last Updated:** November 11, 2025

@@ -1,0 +1,205 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Optimal PWM Control of Dual Active Bridge Converters for Electric Vehicle Charging Applications
+}
+
+\author{\IEEEauthorblockN{Harshit Singh}
+\IEEEauthorblockA{\textit{Department of Electrical Engineering} \\
+\textit{IIT Roorkee}\\
+Roorkee, India \\
+22115065 \\
+harshit\_s@ee.iitr.ac.in}
+\and
+\IEEEauthorblockN{Jatin Singal}
+\IEEEauthorblockA{\textit{Department of Electrical Engineering} \\
+\textit{IIT Roorkee}\\
+Roorkee, India \\
+22115074 \\
+jatin\_s@ee.iitr.ac.in}
+\and
+\IEEEauthorblockN{Karthik Ayangar}
+\IEEEauthorblockA{\textit{Department of Electrical Engineering} \\
+\textit{IIT Roorkee}\\
+Roorkee, India \\
+22115080 \\
+karthik\_a@ee.iitr.ac.in}
+}
+
+
+\maketitle
+
+\begin{abstract}
+This project aims to develop an optimal Pulse-Width Modulation (PWM) control strategy for a Dual Active Bridge (DAB) converter within a multi-port electric vehicle (EV) charging station. The objective is to dynamically adjust the converter's phase-shift parameters in real-time to meet variable power demands while simultaneously minimizing inductor RMS current. This approach reduces conduction losses and maximizes overall efficiency across a wide and unpredictable range of operating conditions, which is critical for modern charging infrastructure.
+\end{abstract}
+\begin{IEEEkeywords}
+Dual Active Bridge (DAB), Electric Vehicle (EV) Charger, PWM Control, Phase-Shift Modulation, Current Stress Optimization, Variable Load.
+\end{IEEEkeywords}
+
+\section{Introduction: The Variable Load Challenge in EV Charging}
+The proliferation of electric vehicles (EVs) necessitates the development of high-efficiency, high-power-density charging infrastructure. A cornerstone of this infrastructure is the multi-port DC fast-charging station, which often contains numerous charging ports operating simultaneously. A significant and complex challenge arises from this architecture: the power demand at each individual port is highly variable and unpredictable. This variability is influenced by factors such as the connected vehicle's battery state-of-charge (SoC), its battery chemistry and temperature, and the overarching power management strategy of the charging station, which may dynamically allocate power among ports.
+
+The Dual Active Bridge (DAB) converter is a promising topology for these applications due to its inherent bidirectional power flow capability (essential for Vehicle-to-Grid, or V2G) and galvanic isolation. However, conventional DAB converters are typically designed and optimized to operate at a fixed, nominal power level with predefined duty ratios or phase shifts. When subjected to the highly variable loads of a real-world EV charging environment, their efficiency can drop significantly due to high circulating currents and a loss of soft-switching conditions. This research focuses on developing an advanced, optimal PWM control strategy for DAB converters that ensures high-efficiency operation across all possible power levels, making them a truly viable and robust solution for next-generation EV charging systems.
+
+\section{Optimization Objective for Dynamic Loads}
+The core objective of this work is to devise a control algorithm that continuously optimizes the performance of a DAB converter under the variable load conditions of an EV charging port. For any given power requirement, $P_{req}$, which can change dynamically, the goal is to find the optimal set of phase-shift angles that satisfies the power demand while minimizing the RMS current flowing through the series inductor ($I_{rms}$).
+
+The optimization problem can be formulated as a real-time control target:
+\begin{center}
+\textbf{Find:} The set of control variables ($D_1, D_2, \phi$) \\
+\textbf{To Minimize:} $I_{rms}(D_1, D_2, \phi)$ \\
+\textbf{Subject to:} $P(D_1, D_2, \phi) = P_{req}(t)$
+\end{center}
+where $D_1$ and $D_2$ are the internal phase shifts of the two bridges (controlling the pulse width of the AC voltage) and $\phi$ is the external phase shift between them (controlling the power flow direction and magnitude). Minimizing $I_{rms}$ directly reduces conduction losses ($P_{loss} = I_{rms}^2 \cdot R_{esr}$) in the transformer windings, inductor, and semiconductor switches. This is the dominant loss mechanism, especially under heavy loads. Achieving this will ensure high efficiency not just at a single design point, but across the full spectrum of charging scenarios. While this analysis focuses on the foundational 2-level DAB, the principles are directly extensible to the more complex 3-level and 5-level converters required for high-power charging applications.
+\begin{figure*}
+\centering
+\includegraphics[width=17cm]{simulink_model.png} % Replace with an actual circuit diagram
+\caption{Circuit Diagram of a Dual Active Bridge (DAB) Converter.}
+\label{fig_dab}
+\end{figure*}
+\section{The Dual Active Bridge Converter Topology}
+
+\subsection{Working Principle}
+A standard DAB converter, shown in Fig. 1, consists of two full-bridge converters (H-bridges) linked by a high-frequency transformer and a series inductor ($L$). The inductor can be the transformer's leakage inductance or a separate component. The operation is as follows:
+\begin{enumerate}
+    \item The primary-side H-bridge switches the input DC voltage ($V_1$) to generate a high-frequency, multi-level AC voltage waveform ($v_p$) across the primary winding of the transformer.
+    \item Similarly, the secondary-side H-bridge switches its DC voltage ($V_2$) to generate another high-frequency AC voltage waveform ($v_s$) on the secondary side.
+    \item The difference between these two voltages, $v_p - n \cdot v_s$, appears across the series inductor $L$. This voltage difference drives a current, $i_L$, through the inductor.
+    \item The magnitude and direction of the power flow are controlled by precisely timing the switching of the two bridges. By creating a phase shift between the fundamental components of $v_p$ and $v_s$, energy is transferred from the leading bridge to the lagging bridge.
+    \item The inductor current, $i_L$, is piecewise linear (triangular), and its shape and RMS value are highly dependent on the applied voltage waveforms. Advanced control methods like TPS manipulate the shape of $v_p$ and $v_s$ to shape $i_L$ for minimum RMS value, thereby minimizing losses.
+\end{enumerate}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.4\textwidth]{graph1.png} % Placeholder for waveform graph
+\caption{Typical waveforms for primary voltage ($v_p$), secondary voltage ($v_s$, referred to primary), and the resulting inductor current ($i_L$) in a DAB converter under TPS control. The optimization aims to minimize the RMS value of $i_L$.}
+\label{fig_waveforms}
+\end{figure}
+
+\subsection{Core Advantages for EV Charging}
+For isolated, bidirectional DC-DC conversion, the DAB converter has emerged as a preferred topology due to several key advantages:
+\begin{itemize}
+    \item \textbf{High Power Density:} High-frequency operation allows for smaller magnetic components and capacitors, leading to a compact and lightweight converter.
+    \item \textbf{High Efficiency:} The DAB topology can achieve Zero Voltage Switching (ZVS) over a wide operating range, which significantly reduces switching losses in the power semiconductors.
+    \item \textbf{Bidirectional Power Flow:} The symmetric structure is crucial for Vehicle-to-Grid (V2G) technology, allowing the EV battery to supply power back to the grid.
+    \item \textbf{Galvanic Isolation:} The transformer provides essential safety isolation between the grid and the vehicle.
+    \item \textbf{Modularity:} The design allows for easy scaling by paralleling modules to achieve the higher power ratings required for fast-charging stations.
+\end{itemize}
+
+\subsection{Control Strategies}
+Power flow in a DAB is controlled by modulating the phase shifts of the AC voltages.
+\begin{itemize}
+    \item \textbf{Single-Phase-Shift (SPS):} The simplest method, where only the external phase shift ($\phi$) between the two bridge voltages is controlled. It is easy to implement but suffers from high circulating currents (reactive power) and loss of ZVS at light loads or when the voltage conversion ratio deviates from unity, leading to poor efficiency.
+    \item \textbf{Triple-Phase-Shift (TPS):} This advanced method uses all three available degrees of freedom: the internal phase shifts of each bridge ($D_1, D_2$) and the external phase shift ($\phi$). These extra variables allow for the creation of more complex, multi-level voltage waveforms (e.g., three-level or five-level). This flexibility can be exploited to shape the inductor current, minimize its RMS value, and maintain ZVS over a much wider range of power levels and voltage conditions compared to SPS.
+\end{itemize}
+
+\section{Analytical Modeling of DAB under TPS Control}
+To perform the optimization, an accurate analytical model linking the control inputs ($D_1, D_2, \phi$) to the outputs ($P, I_{rms}$) is required. The model by Tong et al. provides a precise time-domain analysis, dividing the converter's operation into six modes based on the relative timing of the control signals \cite{b1}. The key variables are the switching frequency ($f_s$), inductance ($L$), input/output voltages ($V_1, V_2$), turns ratio ($n$), and the voltage conversion ratio $k = nV_2/V_1$. The phase shifts $D_1, D_2, \phi$ are defined in radians.
+
+\textit{Note: The variables $D_0, D_1, D_2$ represent phase shifts as fractions of the half-period, $T = 1/(2f_s)$, and $V_2$ is the secondary voltage referred to the primary side ($n \cdot V_{out}$), consistent with the notation in the reference paper.}
+
+\\begin{table*}[!t]
+\centering
+\caption{Analytical Formulas for Power Flow and Inductor RMS Current}
+\label{tab:formulas}
+\renewcommand{\arraystretch}{1.5} % Slightly reduce row spacing
+\tiny % make font smaller
+\resizebox{\textwidth}{!}{ % force table to fit page width
+\begin{tabular}{|c|>{\centering\arraybackslash}p{2.3cm}|p{13.5cm}|}
+\hline
+\textbf{Mode} & \textbf{Operating Range} & \textbf{Formulas} \\
+\hline
+\textbf{1} & $0<D_1<D_0<1$ \newline $D_1<D_0+D_2<1$ & 
+$\begin{aligned}
+P &= \frac{-V_{1}V_{2}T}{L}(-D_{0}+{D_{0}}^{2}+0.5D_{1}-D_{0}D_{1}+0.5D_{1}^{2} -0.5D_{2}+D_{0}D_{2}-0.5D_{1}D_{2}+0.5{D_{2}}^{2}) \\
+I_{rms}^{2} &= \frac{T^{2}}{3L^{2}} \bigl[ 0.125V_1^2 + 0.125V_2^2 + 0.5(0.25-1.5D_1^2+D_1^3)V_1^2 -0.5(0.25-1.5D_0^2+D_0^3)V_1V_2 \\
+& \quad -0.5(0.25-1.5(D_0+D_2)^2+(D_0+D_2)^3)V_1V_2 -0.5(0.25-1.5(D_0-D_1)^2+(D_0-D_1)^3)V_1V_2 \\
+& \quad -0.5(0.25-1.5(D_0+D_2-D_1)^2+(D_0+D_2-D_1)^3)V_1V_2 +0.5(0.25-1.5D_2^2+D_2^3)V_2^2 \bigr]
+\end{aligned}$ \\
+\hline
+\textbf{2} & $0<D_1<D_0<1$ \newline $1<D_0+D_2<1+D_1$ &
+$\begin{aligned}
+P &= -\frac{V_{1}V_{2}T}{L}(-0.5+0.5D_{0}^{2}+0.5D_{1}-D_{0}D_{1} +0.5D_{1}^{2}+0.5D_{2}-0.5D_{1}D_{2}) \\
+I_{rms}^{2} &= \frac{T^{2}}{3L^{2}} \bigl[ 0.125V_1^2 + 0.125V_2^2 + 0.5(0.25-1.5D_1^2+D_1^3)V_1^2 -0.5(0.25-1.5D_0^2+D_0^3)V_1V_2 \\
+& \quad -0.5(0.25-1.5(2-D_0-D_2)^2+(2-D_0-D_2)^3)V_1V_2 -0.5(0.25-1.5(D_0-D_1)^2+(D_0-D_1)^3)V_1V_2 \\
+& \quad -0.5(0.25-1.5(D_0+D_2-D_1)^2+(D_0+D_2-D_1)^3)V_1V_2 +0.5(0.25-1.5D_2^2+D_2^3)V_2^2 \bigr]
+\end{aligned}$ \\
+\hline
+\textbf{3} & $0<D_1<D_0<1$ \newline $1+D_1<D_0+D_2<2$ &
+$\begin{aligned}
+P &= \frac{V_{1}V_{2}T}{L}(-1+D_{0}-0.5D_{1}+1.5D_{2} -D_{0}D_{2}+0.5D_{1}D_{2}-0.5D_{2}^{2}) \\
+I_{rms}^{2} &= \frac{T^{2}}{3L^{2}} \bigl[ 0.125V_1^2 + 0.125V_2^2 + 0.5(0.25-1.5D_1^2+D_1^3)V_1^2 -0.5(0.25-1.5D_0^2+D_0^3)V_1V_2 \\
+& \quad -0.5(0.25-1.5(2-D_0-D_2)^2+(2-D_0-D_2)^3)V_1V_2 -0.5(0.25-1.5(D_0-D_1)^2+(D_0-D_1)^3)V_1V_2 \\
+& \quad -0.5(0.25-1.5(2-D_0-D_2+D_1)^2+(2-D_0-D_2+D_1)^3)V_1V_2 +0.5(0.25-1.5D_2^2+D_2^3)V_2^2 \bigr]
+\end{aligned}$ \\
+\hline
+\textbf{4} & $0<D_0<D_1<1$ \newline $0<D_0+D_2<D_1$ &
+$\begin{aligned}
+P &= \frac{V_{1}V_{2}T}{L}(-D_{0}+0.5D_{1}+D_{0}D_{1}-0.5D_{1}^{2} -0.5D_{2}+0.5D_{1}D_{2}) \\
+I_{rms}^{2} &= \frac{T^{2}}{3L^{2}} \bigl[ 0.125V_1^2 + 0.125V_2^2 + 0.5(0.25-1.5D_1^2+D_1^3)V_1^2 -0.5(0.25-1.5D_0^2+D_0^3)V_1V_2 \\
+& \quad -0.5(0.25-1.5(D_0+D_2)^2+(D_0+D_2)^3)V_1V_2 -0.5(0.25-1.5(D_1-D_0)^2+(D_1-D_0)^3)V_1V_2 \\
+& \quad -0.5(0.25-1.5(D_1-D_0-D_2)^2+(D_1-D_0-D_2)^3)V_1V_2 +0.5(0.25-1.5D_2^2+D_2^3)V_2^2 \bigr]
+\end{aligned}$ \\
+\hline
+\textbf{5} & $0<D_0<D_1<1$ \newline $D_1<D_0+D_2<1$ &
+$\begin{aligned}
+P &= -\frac{V_{1}V_{2}T}{L}(-D_{0}+0.5D_{0}^{2}+0.5D_{1}-0.5D_{2} +D_{0}D_{2}-0.5D_{1}D_{2}+0.5{D_{2}}^{2}) \\
+I_{rms}^{2} &= \frac{T^{2}}{3L^{2}} \bigl[ 0.125V_1^2 + 0.125V_2^2 + 0.5(0.25-1.5D_1^2+D_1^3)V_1^2 -0.5(0.25-1.5D_0^2+D_0^3)V_1V_2 \\
+& \quad -0.5(0.25-1.5(D_0+D_2)^2+(D_0+D_2)^3)V_1V_2 -0.5(0.25-1.5(D_1-D_0)^2+(D_1-D_0)^3)V_1V_2 \\
+& \quad -0.5(0.25-1.5(D_0+D_2-D_1)^2+(D_0+D_2-D_1)^3)V_1V_2 +0.5(0.25-1.5D_2^2+D_2^3)V_2^2 \bigr]
+\end{aligned}$ \\
+\hline
+\textbf{6} & $0<D_0<D_1<1$ \newline $1<D_0+D_2<1+D_1$ &
+$\begin{aligned}
+P &= -\frac{V_{1}V_{2}T}{L}(-0.5+0.5D_{1}+0.5D_{2}-0.5D_{1}D_{2}) \\
+I_{rms}^{2} &= \frac{T^{2}}{3L^{2}} \bigl[ 0.125V_1^2 + 0.125V_2^2 + 0.5(0.25-1.5D_1^2+D_1^3)V_1^2 -0.5(0.25-1.5D_0^2+D_0^3)V_1V_2 \\
+& \quad -0.5(0.25-1.5(2-D_0-D_2)^2+(2-D_0-D_2)^3)V_1V_2 -0.5(0.25-1.5(D_1-D_0)^2+(D_1-D_0)^3)V_1V_2 \\
+& \quad -0.5(0.25-1.5(D_0+D_2-D_1)^2+(D_0+D_2-D_1)^3)V_1V_2 +0.5(0.25-1.5D_2^2+D_2^3)V_2^2 \bigr]
+\end{aligned}$ \\
+\hline
+\end{tabular}
+}
+\end{table*}
+
+
+These analytical expressions form the mathematical basis of the optimization algorithm. By numerically solving these equations, a lookup table or a real-time search algorithm can be implemented in the converter's digital controller to find the optimal ($D_1, D_2, \phi$) for any given power demand.
+
+\section{Project Progress}
+The initial phase of this research has focused on establishing a strong theoretical and simulation-based foundation using the 2-level DAB converter.
+\begin{itemize}
+    \item \textbf{Simulation and Analysis:} A 2-level DAB converter has been simulated to verify the fundamental operating principles and to visualize the voltage and current waveforms under various control inputs. This step was crucial for validating our understanding of the analytical models.
+    \item \textbf{Comprehensive Data Generation:} We have developed a script to generate a comprehensive lookup table. This table is populated by systematically iterating through a wide range of possible values for the control variables $D_0, D_1,$ and $D_2$. For each combination, the corresponding power transfer ($P$) and inductor RMS current ($I_{rms}$) are calculated using the analytical equations for all six modes of operation.
+    \item \textbf{Mode Mapping:} After generating the complete data set, we have processed it to create a mapping between specific power ranges and the potential operating modes that can achieve them. This pre-analysis significantly narrows down the search space for the subsequent optimization step.
+\end{itemize}
+
+\section{Future Work}
+Building on the foundational work, the next steps of the project are aimed at developing and implementing a real-time, efficient optimization strategy, with a focus on higher-power, multi-level converter topologies.
+\begin{enumerate}
+    \item \textbf{3-Level DAB Simulation:} The immediate next step is to extend the analysis to a 3-level-to-3-level (3L-3L) DAB converter. This will be performed using Simulink to model the more complex switching states and control logic inherent to multi-level converters, which are more practical for high-power EV charging.
+    \item \textbf{Development of Optimization Algorithm:} For a given power demand, $P_1$, we will implement an optimization routine. This algorithm will use the "power range vs. possible modes" relationship to limit its search to only the viable operating modes. The values of ($D_0, D_1, D_2$) from our pre-calculated table will serve as intelligent initial guesses for the optimization algorithm, ensuring faster convergence to the true optimal point that minimizes $I_{rms}$.
+    \item \textbf{Optimized Lookup Table Generation:} The results from the optimization routine will be used to generate a final, streamlined lookup table. This table will directly map a desired power level to the single, optimal set of ($D_0, D_1, D_2$) that guarantees minimum conduction loss. This table would be suitable for implementation in a real-time digital controller.
+    \item \textbf{Machine Learning Integration:} As a potential enhancement, we will investigate the use of machine learning techniques. A trained neural network, for example, could potentially replace the lookup table and optimization algorithm, offering a faster and more adaptive method for determining the optimal control parameters in real-time.
+\end{enumerate}
+\section{Conclusion}
+The effective operation of DAB converters in variable-load applications like EV charging hinges on the implementation of advanced, adaptive control strategies. Moving beyond the limitations of simple SPS control to a comprehensive TPS scheme unlocks the potential for significant, system-wide efficiency improvements. The detailed analytical models presented provide the fundamental tools required to develop a powerful, optimization-based controller. By using these precise equations to find the operating point that minimizes inductor RMS current for any required power level, it is possible to design a DAB-based EV charger that maintains high efficiency across its entire, dynamic operating range. This research forms the basis for developing such a controller, which is a critical enabling technology for the deployment of robust, efficient, and cost-effective fast-charging infrastructure.
+
+\begin{thebibliography}{00}
+\bibitem{b1} A. Tong, L. Hang, G. Li, Y. Guo, Y. Zou, J. Chen, J. Li, J. Zhuang, and S. Li, "Power flow and inductor current analysis of PWM control for Dual Active Bridge converter," 2016 IEEE 8th International Power Electronics and Motion Control Conference (IPEMC-ECCE Asia), Hefei, China, 2016, pp. 64-69, doi: 10.1109/IPEMC.2016.7512270.
+\bibitem{b2} M. N. Kheraluwala, R. W. De Doncker, D. M. Divan, "Performance characterization of a high-power dual active bridge dc-to-dc converter," IEEE Transactions on Industry Applications, vol. 28, no. 6, pp. 1294-1301, Nov.-Dec. 1992.
+\bibitem{b3} B. Zhao, Q. Song, W. Liu, and W. Sun, "Current-Stress-Optimized Switching Strategy of Isolated Bidirectional DC/DC Converter With Dual-Phase-Shift Control," IEEE Transactions on Industrial Electronics, vol. 60, no. 10, pp. 4458-4467, Oct. 2013.
+\bibitem{b4} H. Qin and J. W. Kolar, "Design and Experimental Investigation of a Bidirectional Dual-Active-Bridge DC-DC Converter With A WBG GaN-Device-Based High-Frequency-Link," in IEEE Journal of Emerging and Selected Topics in Power Electronics, vol. 4, no. 4, pp. 1256-1273, Dec. 2016.
+\bibitem{b5} R. W. De Doncker, D. M. Divan, and M. H. Kheraluwala, "A three-phase soft-switched high-power-density DC/DC converter for high-power applications," in IEEE Transactions on Industry Applications, vol. 27, no. 1, pp. 63-73, Jan.-Feb. 1991.
+\end{thebibliography}
+
+\end{document}
