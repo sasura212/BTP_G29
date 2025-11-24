@@ -5,6 +5,13 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
+import os
+
+# Get paths relative to dashboard directory
+DASHBOARD_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(DASHBOARD_DIR)
+MODELS_DIR = os.path.join(PROJECT_ROOT, 'models')
+DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
 
 # Page configuration
 st.set_page_config(
@@ -29,7 +36,7 @@ f = 1 / (2 * T) # Switching frequency [Hz]
 def load_rf_model():
     """Load the trained Random Forest model"""
     try:
-        model = joblib.load('tps_rf_model.pkl')
+        model = joblib.load(os.path.join(MODELS_DIR, 'tps_rf_model.pkl'))
         return model
     except FileNotFoundError:
         return None
@@ -38,12 +45,12 @@ def load_rf_model():
 def load_svr_models():
     """Load the trained SVR models and scaler"""
     try:
-        scaler = joblib.load('svr_scaler.pkl')
+        scaler = joblib.load(os.path.join(MODELS_DIR, 'svr_scaler.pkl'))
         models = {
-            'D0': joblib.load('svr_model_D0.pkl'),
-            'D1': joblib.load('svr_model_D1.pkl'),
-            'D2': joblib.load('svr_model_D2.pkl'),
-            'Irms_A': joblib.load('svr_model_Irms_A.pkl')
+            'D0': joblib.load(os.path.join(MODELS_DIR, 'svr_model_D0.pkl')),
+            'D1': joblib.load(os.path.join(MODELS_DIR, 'svr_model_D1.pkl')),
+            'D2': joblib.load(os.path.join(MODELS_DIR, 'svr_model_D2.pkl')),
+            'Irms_A': joblib.load(os.path.join(MODELS_DIR, 'svr_model_Irms_A.pkl'))
         }
         return scaler, models
     except FileNotFoundError:
@@ -53,7 +60,7 @@ def load_svr_models():
 def load_lookup_table():
     """Load the integrated optimal lookup table"""
     try:
-        df = pd.read_csv('integrated_optimal_lookup_table.csv')
+        df = pd.read_csv(os.path.join(DATA_DIR, 'integrated_optimal_lookup_table.csv'))
         return df
     except FileNotFoundError:
         st.warning("⚠️ Lookup table not found. Some features will be limited.")
@@ -63,7 +70,7 @@ def load_lookup_table():
 def load_rf_interpolated():
     """Load Random Forest interpolated predictions"""
     try:
-        df = pd.read_csv('rf_interpolated_lookup_table.csv')
+        df = pd.read_csv(os.path.join(DATA_DIR, 'rf_interpolated_lookup_table.csv'))
         return df
     except FileNotFoundError:
         return None
@@ -72,7 +79,7 @@ def load_rf_interpolated():
 def load_svr_interpolated():
     """Load SVR interpolated predictions"""
     try:
-        df = pd.read_csv('svr_interpolated_lookup_table.csv')
+        df = pd.read_csv(os.path.join(DATA_DIR, 'svr_interpolated_lookup_table.csv'))
         return df
     except FileNotFoundError:
         return None

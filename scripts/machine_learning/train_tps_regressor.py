@@ -18,6 +18,10 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 import joblib
+import os
+
+# Get project root directory
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
 print("=" * 70)
 print("TPS RANDOM FOREST REGRESSOR TRAINING")
@@ -27,7 +31,7 @@ print("=" * 70)
 # 1. Load and Prepare Data
 # ============================================================================
 print("\n📂 Loading dataset...")
-df = pd.read_csv('integrated_optimal_lookup_table.csv')
+df = pd.read_csv(os.path.join(PROJECT_ROOT, 'data', 'integrated_optimal_lookup_table.csv'))
 
 # Sort by power and drop NaNs
 df = df.sort_values('Power_Target_W').dropna()
@@ -124,15 +128,18 @@ for i, (ax, name) in enumerate(zip(axes.flat, target_names)):
     ax.grid(True, alpha=0.3)
     
 plt.tight_layout()
-plt.savefig('rf_predictions_vs_actual.png', dpi=150, bbox_inches='tight')
-print("   ✓ Saved plot: rf_predictions_vs_actual.png")
+plt.savefig(os.path.join(PROJECT_ROOT, 'figures', 'rf_predictions_vs_actual.png'), dpi=150, bbox_inches='tight')
+print("   ✓ Validation plot saved: figures/rf_predictions_vs_actual.png")
 
 # ============================================================================
 # 6. Save Model
 # ============================================================================
+# ============================================================================
+# 6. Save Model
+# ============================================================================
 print("\n💾 Saving trained model...")
-joblib.dump(model, 'tps_rf_model.pkl')
-print("   ✓ Model saved: tps_rf_model.pkl")
+joblib.dump(model, os.path.join(PROJECT_ROOT, 'models', 'tps_rf_model.pkl'))
+print("   ✓ Model saved: models/tps_rf_model.pkl")
 
 # ============================================================================
 # 7. Generate Interpolated Predictions
@@ -152,9 +159,9 @@ interpolated_df = pd.DataFrame({
     'Irms_pred': predictions[:, 3]
 })
 
-interpolated_df.to_csv('rf_interpolated_lookup_table.csv', index=False)
+interpolated_df.to_csv(os.path.join(PROJECT_ROOT, 'data', 'rf_interpolated_lookup_table.csv'), index=False)
 print(f"   ✓ Generated {len(interpolated_df)} interpolated points")
-print("   ✓ Saved: rf_interpolated_lookup_table.csv")
+print("   ✓ Saved: data/rf_interpolated_lookup_table.csv")
 
 # ============================================================================
 # 8. Feature Importance

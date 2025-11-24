@@ -19,6 +19,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 import joblib
+import os
+
+# Get project root directory
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
 print("=" * 70)
 print("TPS SUPPORT VECTOR REGRESSION (SVR) TRAINING")
@@ -28,7 +32,7 @@ print("=" * 70)
 # 1. Load and Prepare Data
 # ============================================================================
 print("\n📂 Loading dataset...")
-df = pd.read_csv('integrated_optimal_lookup_table.csv')
+df = pd.read_csv(os.path.join(PROJECT_ROOT, 'data', 'integrated_optimal_lookup_table.csv'))
 
 # Sort by power and drop NaNs
 df = df.sort_values('Power_Target_W').dropna()
@@ -100,14 +104,14 @@ for i, target in enumerate(target_names):
     models[target] = model
     
     # Save model
-    filename = f"svr_model_{target}.pkl"
+    filename = os.path.join(PROJECT_ROOT, 'models', f"svr_model_{target}.pkl")
     joblib.dump(model, filename)
-    print(f"      ✓ Saved: {filename}")
+    print(f"      ✓ Saved: models/svr_model_{target}.pkl")
     print()
 
 # Save the scaler as well
-joblib.dump(scaler_X, 'svr_scaler.pkl')
-print("   ✓ Saved: svr_scaler.pkl (feature scaler)")
+joblib.dump(scaler_X, os.path.join(PROJECT_ROOT, 'models', 'svr_scaler.pkl'))
+print("   ✓ Saved: models/svr_scaler.pkl (feature scaler)")
 
 # ============================================================================
 # 5. Calculate Overall Performance
@@ -154,9 +158,9 @@ interpolated_df = pd.DataFrame({
     'Irms_pred': predictions['Irms_A']
 })
 
-interpolated_df.to_csv('svr_interpolated_lookup_table.csv', index=False)
+interpolated_df.to_csv(os.path.join(PROJECT_ROOT, 'data', 'svr_interpolated_lookup_table.csv'), index=False)
 print(f"   ✓ Generated {len(interpolated_df)} interpolated points")
-print("   ✓ Saved: svr_interpolated_lookup_table.csv")
+print("   ✓ Saved: data/svr_interpolated_lookup_table.csv")
 
 # ============================================================================
 # 7. Visualization
@@ -191,8 +195,8 @@ for i, (ax, target) in enumerate(zip(axes.flat, target_names)):
     ax.grid(True, alpha=0.3, linestyle='--')
     
 plt.tight_layout()
-plt.savefig('svr_predictions_vs_actual.png', dpi=150, bbox_inches='tight')
-print("   ✓ Saved plot: svr_predictions_vs_actual.png")
+plt.savefig(os.path.join(PROJECT_ROOT, 'figures', 'svr_predictions_vs_actual.png'), dpi=150, bbox_inches='tight')
+print("   ✓ Saved plot: figures/svr_predictions_vs_actual.png")
 
 # ============================================================================
 # 8. Additional Visualization: Power vs Predictions
@@ -224,8 +228,8 @@ for i, (ax, target, pred_col, data_col) in enumerate(zip(axes2.flat, target_name
     ax.grid(True, alpha=0.3, linestyle='--')
 
 plt.tight_layout()
-plt.savefig('svr_power_trends.png', dpi=150, bbox_inches='tight')
-print("   ✓ Saved plot: svr_power_trends.png")
+plt.savefig(os.path.join(PROJECT_ROOT, 'figures', 'svr_power_trends.png'), dpi=150, bbox_inches='tight')
+print("   ✓ Saved plot: figures/svr_power_trends.png")
 
 # ============================================================================
 # 9. Performance Summary Table
