@@ -74,7 +74,7 @@ def main():
     parser.add_argument("--power-min", type=float, default=0.0)
     parser.add_argument("--power-max", type=float, default=3500.0)
     parser.add_argument("--power-step", type=float, default=10.0)
-    parser.add_argument("--power-tolerance", type=float, default=2.0)
+    parser.add_argument("--power-tolerance", type=float, default=5.0)
     parser.add_argument("--max-nearest-error", type=float, default=100.0)
     args = parser.parse_args()
 

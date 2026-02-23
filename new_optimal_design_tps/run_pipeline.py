@@ -23,8 +23,6 @@ def main():
             "3500",
             "--power-step",
             "10",
-            "--power-tolerance",
-            "2",
         ],
         check=True,
     )
